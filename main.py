@@ -350,13 +350,16 @@ class ThirdMechanic:
     
         # Initial spawn point for me
         me_spawn_y[i] = me_pos[i][1] - 1000
-
+        '''
         # Boundary
         me_bound_x.append([me_pos[i][0]+50,me_pos[i][0]-50])
 
         # Speed
         me_change.append(random.choice([me_speed, -me_speed]))
-
+        '''
+    me_bound_x = [[me_pos[i][0]+50,me_pos[i][0]-50] for i in range(6)]
+    me_change = [random.choice([me_speed, -me_speed]) for i in range(6)]
+    
     def draw_enemies(self):
         for i in range(2):
             screen.blit(ThirdMechanic.se_img[i], ThirdMechanic.se_pos[i])
