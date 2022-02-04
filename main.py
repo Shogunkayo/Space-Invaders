@@ -1,4 +1,3 @@
-from numpy import True_
 import pygame
 import random
 pygame.init()
@@ -517,7 +516,7 @@ class ThirdMechanic:
                         ThirdMechanic.me_state[i] = False
 
 clock = pygame.time.Clock()
-screen = pygame.display.set_mode((1920, 1080))
+screen = pygame.display.set_mode((1920, 1040))
 
 # Set background according to level
 if Player.current_level == 0:
