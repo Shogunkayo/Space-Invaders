@@ -1,3 +1,4 @@
+from numpy import True_
 import pygame
 import random
 pygame.init()
@@ -12,7 +13,10 @@ class Player:
     player_state = True
     current_level = 0
     score = 0
-    hitcount = 0
+    first_hitcount = 0
+    second_hitcount = 0
+    se_hitcount = 0
+    me_hitcount = 0
 
     #Bullet attributes
     bullet_img = pygame.image.load("bullet.png")
@@ -87,7 +91,6 @@ class Player:
 
     def bullet_reset(self):
         # Resets position of bullet if it goes out of screen
-        if Player.bullet_pos[1] < 0:
             Player.bullet_state = "ready"
             Player.bullet_fire = False
             Player.bullet_pos[1] = 800
@@ -96,6 +99,7 @@ class Player:
         if Player.bullet_fire:
             player.create_bullet(Player.bullet_pos[0],Player.bullet_pos[1])
             Player.bullet_pos[1] += Player.bullet_change[1]
+        if Player.bullet_pos[1] < 0:
             player.bullet_reset()
 
     def health(self):
@@ -108,18 +112,34 @@ class Player:
                 screen.blit(img_health, health_pos[i])
             else:
                 screen.blit(img_no_health, health_pos[i])        
-    '''
+    
     def reduce_health(self):
         # Detect if boss hit player
-        if EnemyBoss.mechanic.bullet_fired:
-            for i in range(4):
-                if player_hitbox.colliderect(boss.mechanic.bullet_hitboxes[i]):
-                    boss.mechanic.bullet_pos[i] = [-1000,200] 
-                    player.hitcount += 1
+        if boss.enemy_health[5]:
+            if boss.mechanic.bullet_fired:
+                for i in range(4):
+                    if player_hitbox.colliderect(boss.mechanic.bullet_hitboxes[i]):
+                        boss.mechanic.bullet_pos[i] = [-1000,200] 
+                        if boss.enemy_health[2]:
+                            player.first_hitcount += 1
+                        else:
+                            player.second_hitcount = 1
+        else:
+            for i in range(6):
+                if boss.mechanic.me_bullet_fired[i]:
+                    boss.mechanic.me_bullet_hitbox()
+                    if player_hitbox.colliderect(boss.mechanic.me_bullet_hitboxes[i]):
+                        boss.mechanic.bullet_reset(i)
+                        player.me_hitcount = 1
+                
+            for i in range(2):
+                if boss.mechanic.se_bullet_fired[i]:
+                    boss.mechanic.se_bullet_hitbox()
+                    if player_hitbox.colliderect(boss.mechanic.se_bullet_hitboxes[i]):
+                        player.se_hitcount += 1
 
         # Reduce player health
-        
-        if player.hitcount > 16:
+        if player.first_hitcount>16 or player.second_hitcount or player.me_hitcount or player.se_hitcount>70:
             for i in Player.player_health.keys():
                 if Player.player_health[i]:
                     Player.player_health[i] = False
@@ -127,12 +147,15 @@ class Player:
 
             print("player hit")
             print(Player.player_health)
-            player.hitcount = 0
-
+            player.first_hitcount = 0
+            player.second_hitcount = 0
+            player.me_hitcount = 0
+            player.se_hitcount = 0
+            
         # End game if player dies
-        if Player.player_health[2] == 0:
-            Player.player_state = False
-        '''
+        if not Player.player_health[2]:
+                Player.player_state = False
+        
 class EnemyBoss:
     # Boss Attributes
     enemy_img = pygame.image.load("alienboss.png")
@@ -169,9 +192,18 @@ class EnemyBoss:
                 EnemyBoss.enemy_pos[0] += EnemyBoss.enemy_change[0]
 
     def health(self):
-        #Choose mechanic based on health of boss
+        # Show health
+        img_health = pygame.image.load("skull.png")
+        img_no_health = pygame.image.load("black_skull.png")
+        health_pos = [(1400,975),(1440,975),(1480,975),(1520,975),(1560,975),(1600,975),(1640,975),(1680,975),(1720,975),(1760,975)]
+        for i in boss.enemy_health.keys():
+            if boss.enemy_health[i]:
+                screen.blit(img_health, health_pos[i])
+            else:
+                screen.blit(img_no_health, health_pos[i])
+        # Choose mechanic based on health of boss
         if EnemyBoss.enemy_health[2]:
-            EnemyBoss.mechanic = ThirdMechanic()
+            EnemyBoss.mechanic = FirstMechanic()
         elif EnemyBoss.enemy_health[5]:
             EnemyBoss.mechanic = SecondMechanic()
         elif EnemyBoss.enemy_health[9]:
@@ -183,7 +215,6 @@ class EnemyBoss:
         bullet_hit = player.bullet_hitbox()
         boss_hit = boss.create_hitbox()
         if boss_hit.colliderect(bullet_hit):
-            player.bullet_reset()
             EnemyBoss.hitcount += 1
         
         # Reduce boss health
@@ -320,46 +351,51 @@ class ThirdMechanic:
     se_bullet_pos = [[110,885],[-47,795]]
     se_bullet_state = ["ready","ready"]
     se_bullet_fired = [False,False]
-    se_bullet_duration = 5000
-    se_bullet_delay = 5000
+    se_bullet_duration = 6000
+    se_bullet_delay = 3000
     se_bullet_cooldown_const = pygame.time.get_ticks()
     se_selector = random.choice([0,1])
-    
+    se_bullet_hitboxes = [None,None]
+
     me_img = pygame.image.load("boss3alien-a.png")
-    me_hitbox = [None for _ in range(8)]
+    me_hitbox = [None for _ in range(6)]
     me_spawn_rand = (100,50)
     me_spawn_y = [0 for i in range(6)]
-    me_pos = [[700,400],[400,500],[250,300],[1200,450],[1450,280],[1650,550]]
+    me_pos = [[700,400],[500,500],[250,300],[1200,450],[1450,280],[1650,550]]
     me_bound_x = []
     me_speed = 2
     me_change = []  
     me_bullet_img = pygame.image.load("slime.png")
-    me_bullet_pos = [[],[],[],[],[],[]]
+    me_bullet_pos = [[0,0] for _ in range(6)]
+    me_bullet_speed = 10
+    me_bullet_change = [0,0,0,0,0,0]
     me_bullet_state = ["ready" for _ in range(6)]
     me_bullet_fired = [False for _ in range(6)]
-    me_bullet_cooldown = 10000
+    me_bullet_cooldown = 2000
+    me_bullet_duration = 10000
     me_bullet_cooldown_const = 0
+    me_state = [True for _ in range(6)]
+    me_health = [[True,True] for _ in range(6)]
+    me_bullet_hitboxes = [None for _ in range(6)]
     bullet_cooldown_vary = 0
-    bullet_hitboxes = [None for _ in range(8)]
-
 
     for i in range(6):
         # Different spawn points for me each run
         me_pos[i][0] = random.choice([i for i in range(me_pos[i][0] - me_spawn_rand[0],me_pos[i][0] + me_spawn_rand[0])])
         me_pos[i][1] = random.choice([i for i in range(me_pos[i][1] - me_spawn_rand[1],me_pos[i][1] + me_spawn_rand[1])])
-    
+
         # Initial spawn point for me
         me_spawn_y[i] = me_pos[i][1] - 1000
-        '''
+        
         # Boundary
-        me_bound_x.append([me_pos[i][0]+50,me_pos[i][0]-50])
+        me_bound_x.append([me_pos[i][0]+100,me_pos[i][0]-100])
 
         # Speed
         me_change.append(random.choice([me_speed, -me_speed]))
-        '''
-    me_bound_x = [[me_pos[i][0]+50,me_pos[i][0]-50] for i in range(6)]
-    me_change = [random.choice([me_speed, -me_speed]) for i in range(6)]
-    
+
+        # Bullet 
+        me_bullet_pos[i] = [me_pos[i][0] + 15, me_pos[i][1] + 10]
+
     def draw_enemies(self):
         for i in range(2):
             screen.blit(ThirdMechanic.se_img[i], ThirdMechanic.se_pos[i])
@@ -368,12 +404,13 @@ class ThirdMechanic:
                 ThirdMechanic.se_pos[1][0] += -1
         
         for i in range(6):
-            screen.blit(ThirdMechanic.me_img, (ThirdMechanic.me_pos[i][0],ThirdMechanic.me_spawn_y[i])) 
-            if ThirdMechanic.me_spawn_y[i] < ThirdMechanic.me_pos[i][1]:
-                ThirdMechanic.me_spawn_y[i] += 5
-            else:
-                ThirdMechanic.me_pos[i][0] += ThirdMechanic.me_change[i]
-
+            if ThirdMechanic.me_state[i]:
+                screen.blit(ThirdMechanic.me_img, (ThirdMechanic.me_pos[i][0],ThirdMechanic.me_spawn_y[i])) 
+                if ThirdMechanic.me_spawn_y[i] < ThirdMechanic.me_pos[i][1]:
+                    ThirdMechanic.me_spawn_y[i] += 5
+                else:
+                    ThirdMechanic.me_pos[i][0] += ThirdMechanic.me_change[i]
+                    
         # Restrict player movement from the sides   
         if Player.player_pos[0] < 150:
             Player.player_pos[0] = 150
@@ -382,57 +419,61 @@ class ThirdMechanic:
 
     def create_hitbox(self):
         for i in range(6):
-            ThirdMechanic.me_hitbox[i] = ThirdMechanic.me_img.get_rect(topleft = ThirdMechanic.me_pos[i])
-            pygame.draw.rect(screen,(255,0,0),ThirdMechanic.me_hitbox[i])
+            if ThirdMechanic.me_state[i]:
+                ThirdMechanic.me_hitbox[i] = ThirdMechanic.me_img.get_rect(topleft = ThirdMechanic.me_pos[i])
+            #pygame.draw.rect(screen,(255,0,0),ThirdMechanic.me_hitbox[i])
 
     def me_movement(self):
         for i in range(6):
-            if ThirdMechanic.me_pos[i][0] < ThirdMechanic.me_bound_x[i][1]:
-                ThirdMechanic.me_change[i] = ThirdMechanic.me_speed
-            if ThirdMechanic.me_pos[i][0] > ThirdMechanic.me_bound_x[i][0]:
-                ThirdMechanic.me_change[i] = -ThirdMechanic.me_speed
+            if ThirdMechanic.me_state[i]:
+                if ThirdMechanic.me_pos[i][0] < ThirdMechanic.me_bound_x[i][1]:
+                    ThirdMechanic.me_change[i] = ThirdMechanic.me_speed
+                if ThirdMechanic.me_pos[i][0] > ThirdMechanic.me_bound_x[i][0]:
+                    ThirdMechanic.me_change[i] = -ThirdMechanic.me_speed
             
     def draw_bullet(self):
         for i in range(2):
             if ThirdMechanic.se_bullet_fired[i]:
                 screen.blit(ThirdMechanic.se_bullet_img, ThirdMechanic.se_bullet_pos[i])
                 ThirdMechanic.se_bullet_state[i] = "not ready"
-
+       
         for i in range(6):
-            if ThirdMechanic.me_bullet_fired[i]:
-                screen.blit(ThirdMechanic.me_bullet_img, ThirdMechanic.me_bullet_pos[i])
-                ThirdMechanic.me_bullet_state[i] = "not ready"
+            if ThirdMechanic.me_state[i]:
+                if ThirdMechanic.me_bullet_fired[i]:
+                    screen.blit(ThirdMechanic.me_bullet_img, ThirdMechanic.me_bullet_pos[i])
+                    ThirdMechanic.me_bullet_state[i] = "not ready"
 
-    def create_bullet_hitbox(self):
+    def se_bullet_hitbox(self):
         for i in range(2):
             if ThirdMechanic.se_bullet_fired[i]: 
-                ThirdMechanic.bullet_hitboxes[i] = ThirdMechanic.se_bullet_img.get_rect(topleft=ThirdMechanic.se_bullet_pos[i])
+                ThirdMechanic.se_bullet_hitboxes[i] = ThirdMechanic.se_bullet_img.get_rect(topleft=ThirdMechanic.se_bullet_pos[i])
+    
+    def me_bullet_hitbox(self):
+        for i in range(6):
+            if ThirdMechanic.me_state[i]:
+                if ThirdMechanic.me_bullet_fired[i]:
+                    ThirdMechanic.me_bullet_hitboxes[i] = ThirdMechanic.me_bullet_img.get_rect(topleft=ThirdMechanic.me_bullet_pos[i])
+            
+    def bullet_movement(self):
         for i in range(6):
             if ThirdMechanic.me_bullet_fired[i]:
-                ThirdMechanic.bullet_hitboxes[i+2] = ThirdMechanic.me_bullet_img.get_rect(topleft=ThirdMechanic.me_bullet_pos[i])
-    
-    def bullet_movement(self):
-        if SecondMechanic.bullet_fired:
-            SecondMechanic.bullet_change = SecondMechanic.bullet_speed
-        else:
-            SecondMechanic.bullet_change = 0
-        for i in range(4):
-            SecondMechanic.bullet_pos[i][1] += SecondMechanic.bullet_change
-
-        SecondMechanic.bullet_reset()
+                ThirdMechanic.me_bullet_change[i] = ThirdMechanic.me_bullet_speed
+            else:
+                ThirdMechanic.me_bullet_change[i] = 0
+            ThirdMechanic.me_bullet_pos[i][1] += ThirdMechanic.me_bullet_change[i]
+            if ThirdMechanic.me_bullet_pos[i][1] > 1100:
+                boss.mechanic.bullet_reset(i)
 
     def shoot_bullet(self):
-        if SecondMechanic.bullet_state == "ready":
-            SecondMechanic.bullet_fired = True
-            for i in range(4):
-                SecondMechanic.bullet_pos[i][0] = EnemyBoss.enemy_pos[0]
+        if ThirdMechanic.me_bullet_state == "ready":
+            ThirdMechanic.me_bullet_fired = True
+            for i in range(6):
+                ThirdMechanic.me_bullet_pos[i][0] = ThirdMechanic.me_pos[i][0]+15        
 
-    def bullet_reset():
-        for i in range(4):
-            if SecondMechanic.bullet_pos[i][1] > 1100:
-                SecondMechanic.bullet_pos = [[-1000,200],[-1000,200],[-1000,200],[-1000,200]]
-                SecondMechanic.bullet_state = "ready"
-                SecondMechanic.bullet_fired = False
+    def bullet_reset(self,i):
+            ThirdMechanic.me_bullet_pos[i] = [ThirdMechanic.me_pos[i][0]+15, ThirdMechanic.me_pos[i][1] + 10]
+            ThirdMechanic.me_bullet_state[i] = "ready"
+            ThirdMechanic.me_bullet_fired[i] = False
 
     def cooldown(self):
         ThirdMechanic.bullet_cooldown_vary = pygame.time.get_ticks()
@@ -442,11 +483,38 @@ class ThirdMechanic:
             if ThirdMechanic.bullet_cooldown_vary - ThirdMechanic.se_bullet_cooldown_const >ThirdMechanic.se_bullet_delay + ThirdMechanic.se_bullet_duration:
                 ThirdMechanic.se_bullet_cooldown_const = pygame.time.get_ticks()
                 ThirdMechanic.se_selector = random.choice([0,1])
-    
         else:
            ThirdMechanic.se_bullet_fired = [False,False]
+    
+        for i in range(6):
+            if ThirdMechanic.me_state[i]:
+                if ThirdMechanic.bullet_cooldown_vary - ThirdMechanic.me_bullet_cooldown_const > ThirdMechanic.me_bullet_cooldown:
+                    ThirdMechanic.me_bullet_fired[i] = True
+                    if ThirdMechanic.bullet_cooldown_vary - ThirdMechanic.me_bullet_cooldown_const > ThirdMechanic.me_bullet_cooldown + ThirdMechanic.me_bullet_duration:
+                        ThirdMechanic.me_bullet_cooldown_const = pygame.time.get_ticks()
+                else:
+                    ThirdMechanic.me_bullet_fired[i] = False
 
         #print(ThirdMechanic.se_bullet_cooldown_const, ThirdMechanic.bullet_cooldown_vary)
+    
+    def health(self):
+        img_health = pygame.image.load("boss3alien-a-health.png")
+        health_pos = [(ThirdMechanic.me_pos[i][0]+13,ThirdMechanic.me_spawn_y[i] - 20) for i in range(6)]
+        bullet_hit = player.bullet_hitbox()
+
+        for i in range(6):
+            if ThirdMechanic.me_health[i][0]:
+                screen.blit(img_health, health_pos[i])
+            if ThirdMechanic.me_health[i][1]:
+                screen.blit(img_health, (health_pos[i][0]+20,health_pos[i][1]))
+            if ThirdMechanic.me_state[i]:
+                if bullet_hit.colliderect(ThirdMechanic.me_hitbox[i]):
+                    player.bullet_reset()
+                    if ThirdMechanic.me_health[i][0]:
+                        ThirdMechanic.me_health[i][0] = False
+                    elif ThirdMechanic.me_health[i][1]:
+                        ThirdMechanic.me_health[i][1] = False
+                        ThirdMechanic.me_state[i] = False
 
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((1920, 1080))
@@ -479,28 +547,31 @@ while running:
         player.health()
         player.bullet_movement()
 
-
     if boss.enemy_state != "dead":
         boss.spawn()
         boss.health()
         boss_hitbox = boss.create_hitbox()
-        '''
-        if boss.health[6]:
+        
+        if boss.enemy_health[5]:
             boss.mechanic.create_hitbox()
             boss.mechanic.draw_bullet()
             boss.mechanic.bullet_movement()
             boss.mechanic.shoot_bullet()
             boss.mechanic.cooldown()
         else:
-            pass
-        '''
-        boss.mechanic.draw_enemies()
-        boss.mechanic.create_hitbox()
-        boss.mechanic.create_bullet_hitbox()
-        boss.mechanic.draw_bullet()
-        boss.mechanic.cooldown()
-        boss.mechanic.me_movement()
-    #player.reduce_health()
+            boss.health()
+            boss.mechanic.draw_enemies()
+            boss.mechanic.create_hitbox()
+            boss.mechanic.draw_bullet()
+            boss.mechanic.cooldown()
+            boss.mechanic.me_movement()
+            boss.mechanic.health()
+            boss.mechanic.bullet_movement()
+            boss.mechanic.shoot_bullet()    
+        
+
+        
+    player.reduce_health()
 
     # Key-press Events
     for event in pygame.event.get():
@@ -511,4 +582,3 @@ while running:
 
     clock.tick(60)
     pygame.display.update()
-    
