@@ -154,9 +154,7 @@ def run():
                     if Player.player_health[i]:
                         Player.player_health[i] = False
                         break
-
-                print("player hit")
-                print(Player.player_health)
+                
                 player.first_hitcount = 0
                 player.second_hitcount = 0
                 player.me_hitcount = 0
@@ -173,7 +171,7 @@ def run():
             over1 = pygame.font.Font("AldotheApache.ttf",50)
             game  = over.render("GAME OVER ",True,(255,255,255))
             menu = over1.render("PRESS SPACE TO RETURN TO MENU", True,(255,255,255))
-            screen.blit(game,(550,00))
+            screen.blit(game,(550,300))
             screen.blit(menu,(640,500))
 
         def level_compete(self):
@@ -181,13 +179,12 @@ def run():
             comp1 = pygame.font.Font("AldotheApache.ttf",50)
             level = comp.render("LEVEL COMPLETED",True,(255,255,255)) 
             next = comp1.render("PRESS SPACE TO PROCEED", True,(255,255,255))
-            screen.blit(level,(500,300))
-            screen.blit(next,(730,450))
+            screen.blit(level,(460,300))
+            screen.blit(next,(710,450))
             if player.level_proceed:
                 player.current_level += 2
                 player.level_proceed = False
                 player.level_done = False
-                print("working")
             
         def mission(self):
             goal = pygame.font.Font("AldotheApache.ttf",30)
@@ -196,6 +193,9 @@ def run():
             if player.current_level == 0:
                 text = "Shoot All The Enemies Before They Reach You"
                 text_pos = [650,975]
+            elif player.current_level == 1:
+                text = "Shoot Each Enemy 3 times to eleminate them"
+                text_pos = [650, 975]
             elif player.current_level == 2:
                 text = "Defeat The Boss"
                 text_pos = [800,975]
@@ -212,12 +212,6 @@ def run():
         enemy_hitbox = [pygame.rect.Rect(0,0,0,0) for _ in range(num)]
         enemy_state = [True for _ in range(num)]
         score = 0
-
-        for i in range(num):
-            enemyx.append(random.randint(1000,1800))
-            enemyy.append(random.randint(20,105))
-            enemyx_change.append(4.5) 
-            enemyy_change.append(60)
         
         def draw_enemy(x,y,i):
             screen.blit(FirstLevel.enemyimg[i],(x,y))
@@ -249,7 +243,7 @@ def run():
                     break 
 
                 # Level Completion
-                elif FirstLevel.score == 20:
+                elif FirstLevel.score == FirstLevel.num:
                     player.level_done = True
                     break
 
@@ -263,6 +257,90 @@ def run():
 
                 if FirstLevel.enemy_state[i]:
                     FirstLevel.draw_enemy(FirstLevel.enemyx[i],FirstLevel.enemyy[i],i)
+
+    class SecondLevel:
+        # Enemy1
+        enemyimg1 = pygame.image.load("monster.png")
+        enemyx1 = 75
+        enemyy1= 50
+        enemyx_change1= 6
+        enemyy_change1= 0
+
+        # Enemy2
+        enemyimg2 = pygame.image.load("monster2.png")
+        enemyx2 = 200
+        enemyy2= 50
+        enemyx_change2 = 6
+        enemyy_change2 = 0
+
+        # Enemy3
+        enemyimg3 = pygame.image.load("monster3.png")
+        enemyx3 = 300
+        enemyy3= 50
+        enemyx_change3 = 6
+        enemyy_change3 = 0
+
+        # Enemy4
+        enemyimg4 = pygame.image.load("monster4.png")
+        enemyx4 = 500
+        enemyy4 = 50
+        enemyx_change4 = 6
+        enemyy_change4 = 0
+
+        # Enemy5
+        enemyimg5 = pygame.image.load("monster5.png")
+        enemyx5 = 600
+        enemyy5= 50
+        enemyx_change5 = 6
+        enemyy_change5 = 0
+
+        # Enemy Bullet
+
+        # Enemy Bullet 1
+        enbulletimg1 = pygame.image.load("bullet.png")
+        enbulletx1 = enemyx1
+        enbullety1 = enemyy1
+        enbulletx_change1 = 0
+        enbullety_change1 = 7.5
+        enbullet_state1 = "Ready"
+
+        # Enemy Bullet 2
+        enbulletimg2 = pygame.image.load("bullet.png")
+        enbulletx2 = enemyx2
+        enbullety2 = enemyy2
+        enbulletx_change2 = 0
+        enbullety_change2 = 7.5
+        enbullet_state2 = "Ready"
+
+        # Enemy Bullet 3
+        enbulletimg3 = pygame.image.load("bullet.png")
+        enbulletx3 = enemyx3
+        enbullety3 = enemyy3
+        enbulletx_change3 = 0
+        enbullety_change3 = 7.5
+        enbullet_state3 = "Ready"
+
+        # Enemy Bullet 4
+        enbulletimg4 = pygame.image.load("bullet.png")
+        enbulletx4 = enemyx4
+        enbullety4 = enemyy4
+        enbulletx_change4 = 0
+        enbullety_change4 = 7.5
+        enbullet_state4 = "Ready"
+
+        # Enemy Bullet 5
+        enbulletimg5 = pygame.image.load("bullet.png")
+        enbulletx5 = enemyx5
+        enbullety5 = enemyy5
+        enbulletx_change5 = 0
+        enbullety_change5 = 7.5
+        enbullet_state5= "Ready"
+
+        score1 = 3
+        score2 = 3
+        score3 = 3
+        score4 = 3
+        score5 = 3
 
     class EnemyBoss:
         # Boss Attributes
@@ -332,9 +410,6 @@ def run():
                     if EnemyBoss.enemy_health[i] == True:
                         EnemyBoss.enemy_health[i] = False
                         break
-
-                    print("Enemy health reduced")
-                print(EnemyBoss.enemy_health)
 
                 EnemyBoss.hitcount = 0        
 
@@ -622,7 +697,7 @@ def run():
         dummy = None
 
     clock = pygame.time.Clock()
-    screen = pygame.display.set_mode((1920, 1080))
+    screen = pygame.display.set_mode((1920, 1020))
     pygame.display.set_caption("Space Invaders")
     icon = pygame.image.load("ufo1.png")
     pygame.display.set_icon(icon)
@@ -633,11 +708,10 @@ def run():
 
     bg_y = -1080
 
-
     player = Player()
     boss = EnemyBoss()
     level1 = FirstLevel()
-
+    level2 = SecondLevel()
 
     while running:
         screen.fill((255,255,255))
@@ -664,11 +738,13 @@ def run():
             level1.movement()
             level1.collision()
 
+        elif player.current_level == 1:
+            pass
+
         elif player.current_level == 2:
             if boss.enemy_state != "dead":
-                boss.spawn()
+                boss.spawn()    
                 boss.health()
-                boss_hitbox = boss.create_hitbox()
                 
                 if boss.enemy_health[5]:
                     boss.mechanic.create_hitbox()
@@ -715,3 +791,4 @@ def run():
         if not running:
             pygame.display.quit()
             exit = True
+
