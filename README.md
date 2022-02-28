@@ -4,7 +4,7 @@ Python project using pygame and tkinter for first sem
 
 
 
-Run main
+Run menu file
 
 
 
