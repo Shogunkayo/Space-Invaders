@@ -1,6 +1,7 @@
 import sys
 import pygame
 import random
+import math
 
 running = True
 exit = False
@@ -148,6 +149,15 @@ def run():
                             if player_hitbox.colliderect(boss.mechanic.se_bullet_hitboxes[i]):
                                 player.se_hitcount += 1
 
+            elif player.current_level == 1:
+                for i in range(5):
+                    if SecondLevel.bullet_hitboxes[i].colliderect(player_hitbox):
+                        level2.bullet_reset(i) 
+                        for i in player.player_health.keys():
+                             if Player.player_health[i]:
+                                Player.player_health[i] = False
+                                break
+
             # Reduce player health
             if player.first_hitcount>16 or player.second_hitcount or player.me_hitcount or player.se_hitcount>70:
                 for i in Player.player_health.keys():
@@ -165,7 +175,6 @@ def run():
                     Player.player_state = False
                     player.game_over()
 
-        # Rehans - Part
         def game_over(self):
             over = pygame.font.Font("AldotheApache.ttf",200)
             over1 = pygame.font.Font("AldotheApache.ttf",50)
@@ -182,7 +191,7 @@ def run():
             screen.blit(level,(460,300))
             screen.blit(next,(710,450))
             if player.level_proceed:
-                player.current_level += 2
+                player.current_level += 1
                 player.level_proceed = False
                 player.level_done = False
             
@@ -259,89 +268,83 @@ def run():
                     FirstLevel.draw_enemy(FirstLevel.enemyx[i],FirstLevel.enemyy[i],i)
 
     class SecondLevel:
-        # Enemy1
-        enemyimg1 = pygame.image.load("monster.png")
-        enemyx1 = 75
-        enemyy1= 50
-        enemyx_change1= 6
-        enemyy_change1= 0
+        enemyimgs = [pygame.image.load("monster.png"),pygame.image.load("monster2.png"),pygame.image.load("monster3.png"),pygame.image.load("monster4.png"),
+                    pygame.image.load("monster5.png")]
+        enemyx = [75,200,300,500,600]
+        enemyy = [50,120,190,260,330]
+        enemyx_change = [6 for _ in range(5)]
+        enemyy_change = [0 for _ in range(5)]
+        enemy_hitboxes = [pygame.rect.Rect(0,0,0,0) for _ in range(5)]
+        enemy_state = [True for _ in range(5)]
+        enemy_health = [3 for _ in range(5)]
 
-        # Enemy2
-        enemyimg2 = pygame.image.load("monster2.png")
-        enemyx2 = 200
-        enemyy2= 50
-        enemyx_change2 = 6
-        enemyy_change2 = 0
+        bulletimgs = [pygame.image.load("level2bullet.png") for _ in range(5)]
+        bulletx = [i for i in enemyx]
+        bullety = [50,50,50,50,50]
+        bullety_change = [10 for _ in range(5)]
+        bullet_state = ["Ready" for _ in range(5)]  
+        bullet_hitboxes = [pygame.rect.Rect(0,0,0,0) for _ in range(5)]
 
-        # Enemy3
-        enemyimg3 = pygame.image.load("monster3.png")
-        enemyx3 = 300
-        enemyy3= 50
-        enemyx_change3 = 6
-        enemyy_change3 = 0
+        def draw_enemy(self):
+            for i in range(5):
+                if SecondLevel.enemy_state[i]:
+                    screen.blit(SecondLevel.enemyimgs[i], (SecondLevel.enemyx[i],SecondLevel.enemyy[i]))
 
-        # Enemy4
-        enemyimg4 = pygame.image.load("monster4.png")
-        enemyx4 = 500
-        enemyy4 = 50
-        enemyx_change4 = 6
-        enemyy_change4 = 0
+        def fire_bullet(self):
+            for i in range(5):
+                if SecondLevel.enemy_state[i]:
+                    SecondLevel.bullet_state[i] = "Fire"
+                    screen.blit(SecondLevel.bulletimgs[i], (SecondLevel.bulletx[i]+16, SecondLevel.bullety[i]+10))
+                    if SecondLevel.bullet_state[i] == "Fire":
+                        SecondLevel.bullety[i] += SecondLevel.bullety_change[i]
+                        
+        def create_hitbox(self):
+            for i in range(5):
+                if SecondLevel.enemy_state[i]:
+                    SecondLevel.enemy_hitboxes[i] = SecondLevel.enemyimgs[i].get_rect(topleft=(SecondLevel.enemyx[i], SecondLevel.enemyy[i]))
+                    SecondLevel.bullet_hitboxes[i] = SecondLevel.bulletimgs[i].get_rect(topleft = (SecondLevel.bulletx[i], SecondLevel.bullety[i]))
+        
+        def enemy_movement(self):
+            bullet_hit = player.bullet_hitbox()
+            for i in range(5):
+                if SecondLevel.enemy_state[i]:
+                    SecondLevel.enemyx[i] += SecondLevel.enemyx_change[i]
+                    if SecondLevel.enemyx[i] <=0:
+                        SecondLevel.enemyx_change[i] = 4.5
+        
+                    elif SecondLevel.enemyx[i] >= 1880:
+                        SecondLevel.enemyx_change[i] = -4.5
+                
+                    if bullet_hit.colliderect(SecondLevel.enemy_hitboxes[i]):
+                        SecondLevel.enemy_health[i] -= 1
+                        player.bullet_reset()
 
-        # Enemy5
-        enemyimg5 = pygame.image.load("monster5.png")
-        enemyx5 = 600
-        enemyy5= 50
-        enemyx_change5 = 6
-        enemyy_change5 = 0
+                    if not SecondLevel.enemy_health[i]: 
+                        SecondLevel.enemy_state[i] = False
 
-        # Enemy Bullet
+             # Level Completion
+                elif True not in level2.enemy_state:
+                    player.level_done = True
+                    break
 
-        # Enemy Bullet 1
-        enbulletimg1 = pygame.image.load("bullet.png")
-        enbulletx1 = enemyx1
-        enbullety1 = enemyy1
-        enbulletx_change1 = 0
-        enbullety_change1 = 7.5
-        enbullet_state1 = "Ready"
+        def bullet_movement(self):
+            for i in range(5):
+                if SecondLevel.enemy_state[i]:
+                    if SecondLevel.bullet_state[i] == "Ready":
+                        level2.fire_bullet()
+                    if SecondLevel.bullety[i] > 1000:
+                        level2.bullet_reset(i)
 
-        # Enemy Bullet 2
-        enbulletimg2 = pygame.image.load("bullet.png")
-        enbulletx2 = enemyx2
-        enbullety2 = enemyy2
-        enbulletx_change2 = 0
-        enbullety_change2 = 7.5
-        enbullet_state2 = "Ready"
-
-        # Enemy Bullet 3
-        enbulletimg3 = pygame.image.load("bullet.png")
-        enbulletx3 = enemyx3
-        enbullety3 = enemyy3
-        enbulletx_change3 = 0
-        enbullety_change3 = 7.5
-        enbullet_state3 = "Ready"
-
-        # Enemy Bullet 4
-        enbulletimg4 = pygame.image.load("bullet.png")
-        enbulletx4 = enemyx4
-        enbullety4 = enemyy4
-        enbulletx_change4 = 0
-        enbullety_change4 = 7.5
-        enbullet_state4 = "Ready"
-
-        # Enemy Bullet 5
-        enbulletimg5 = pygame.image.load("bullet.png")
-        enbulletx5 = enemyx5
-        enbullety5 = enemyy5
-        enbulletx_change5 = 0
-        enbullety_change5 = 7.5
-        enbullet_state5= "Ready"
-
-        score1 = 3
-        score2 = 3
-        score3 = 3
-        score4 = 3
-        score5 = 3
-
+        def bullet_hitbox(self):
+            for i in range(5):
+                if SecondLevel.enemy_state[i]:
+                    SecondLevel.bullet_hitboxes[i] = SecondLevel.bulletimgs[i].get_rect(topleft=(SecondLevel.bulletx[i],SecondLevel.bullety[i]))
+        
+        def bullet_reset(self,i):
+            SecondLevel.bullet_state[i] == "Ready"
+            SecondLevel.bullety[i] = SecondLevel.enemyy[i] + 10
+            SecondLevel.bulletx[i] = SecondLevel.enemyx[i] + 16
+                        
     class EnemyBoss:
         # Boss Attributes
         enemy_img = pygame.image.load("alienboss.png")
@@ -739,7 +742,12 @@ def run():
             level1.collision()
 
         elif player.current_level == 1:
-            pass
+            level2.create_hitbox()
+            level2.draw_enemy()
+            level2.enemy_movement()
+            level2.bullet_movement()
+            level2.bullet_hitbox()
+            level2.fire_bullet()
 
         elif player.current_level == 2:
             if boss.enemy_state != "dead":
@@ -791,4 +799,3 @@ def run():
         if not running:
             pygame.display.quit()
             exit = True
-
