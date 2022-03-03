@@ -1,47 +1,51 @@
-from tkinter import*
+from tkinter import *
 import main
-root=Tk()
-root.title("SPACE INVADERS")
-# icon=PhotoImage(file="icon.png")
-# root.iconphoto(root,icon)
 
-root.geometry("1360x720")
-mylabel=Label(root,text="Space Invaders")              #background image
-bg=PhotoImage(file="bg.png")
-bg1=Label(root,image=bg)
-bg1.place(x=0,y=0)
+def open_tutorial(window):
+    if window:
+        window.destroy()
+    root=Tk()
+    root.title("Tutorials")
+    root.geometry("1360x720")
 
-def tut():
-    import tkinter
-    rout=Tk()
+    bg_image = PhotoImage(file="tutorialimg.png")
+    bg = Label(root, image=bg_image)
+    bg.place(x=0, y=0)
+    
+    exit=Button(root,text="Back to menu",bg="purple",fg="white",padx=50,pady=20,command=lambda: main_menu(root))
+    exit.place(x=70,y=600)
+    root.mainloop()
 
-    rout.geometry("1360x720")
-    rout.title("Tutorials")
-
-    canvas = Canvas(rout, width=1360, height=720)
-    bgg = PhotoImage(file="bg.png")
-    bg11 = Label(root, image=bgg)
-    bg11.place(x=0, y=0)
-    canvas.pack()
-
-    exit=Button(rout,text="Quit Tutorials",bg="black",fg="white",padx=390,pady=50,command=rout.quit)
-    exit.place(x=255,y=600)
-    rout.mainloop()
-
-def start_game():
+def start_game(window):
+    window.destroy()
     if main.running:
         main.run()
     if not main.running:
         main.running = True
+        main_menu(0)
 
-new_game=Button(root,text="PLAY",bg="purple",fg="white",padx=190,pady=50,command=start_game)    #play button
-new_game.place(x=455,y=300) 
+def main_menu(window):
+    if window:
+        window.destroy()
 
-tutorial=Button(root,text="TUTORIALS",bg="purple",fg="white",padx=175,pady=50,command=tut)   #tutorial button
-tutorial.place(x=455,y=450)
+    root = Tk()
+    root.title("SPACE INVADERS")
+    root.geometry("1360x720")
 
-exit=Button(root,text="EXIT GAME",bg="purple",fg="white",padx=175,pady=50,command=root.destroy)   #exit button
-exit.place(x=455,y=600)
+    bg_img=PhotoImage(file="title.png")
+    bg=Label(root,image=bg_img)
+    bg.place(x=0,y=0)
 
-root.mainloop()
+    new_game=Button(root,text="PLAY",bg="purple",fg="white",padx=190,pady=50,command=lambda: start_game(root))    #play button
+    new_game.place(x=455,y=250) 
 
+    tutorial=Button(root,text="CONTROLS",bg="purple",fg="white",padx=175,pady=50,command=lambda: open_tutorial(root))   #tutorial button
+    tutorial.place(x=455,y=400)
+
+    exit=Button(root,text="EXIT GAME",bg="purple",fg="white",padx=175,pady=50,command=root.destroy)   #exit button
+    exit.place(x=455,y=550)
+
+    root.mainloop()
+
+
+main_menu(0)

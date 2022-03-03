@@ -27,6 +27,7 @@ def run():
         display_time_const = pygame.time.get_ticks()
         level_proceed = False
         level_done = False
+        game_done = False
 
         #Bullet attributes
         bullet_img = pygame.image.load("bullet.png")
@@ -183,7 +184,7 @@ def run():
             screen.blit(game,(550,300))
             screen.blit(menu,(640,500))
 
-        def level_compete(self):
+        def level_complete(self):
             comp = pygame.font.Font("AldotheApache.ttf",150)
             comp1 = pygame.font.Font("AldotheApache.ttf",50)
             level = comp.render("LEVEL COMPLETED",True,(255,255,255)) 
@@ -194,6 +195,20 @@ def run():
                 player.current_level += 1
                 player.level_proceed = False
                 player.level_done = False
+
+        def game_complete(self):
+            player.level_done = True
+            comp = pygame.font.Font("AldotheApache.ttf",150)
+            comp1 = pygame.font.Font("AldotheApache.ttf",50)
+            cong1 = pygame.font.Font("AldotheApache.ttf",50)
+            cong = cong1.render("CONGRATULATIONS",True,(255,255,255)) 
+            level = comp.render("YOU WON",True,(255,255,255)) 
+            next = comp1.render("PRESS SPACE TO RETURN TO MENU", True,(255,255,255))
+            screen.blit(cong,(460,100))
+            screen.blit(level,(460,300))
+            screen.blit(next,(710,450))
+            if player.level_proceed:
+                sys.exit()
             
         def mission(self):
             goal = pygame.font.Font("AldotheApache.ttf",30)
@@ -339,7 +354,9 @@ def run():
             for i in range(5):
                 if SecondLevel.enemy_state[i]:
                     SecondLevel.bullet_hitboxes[i] = SecondLevel.bulletimgs[i].get_rect(topleft=(SecondLevel.bulletx[i],SecondLevel.bullety[i]))
-        
+                else:
+                    SecondLevel.bullet_hitboxes[i] = pygame.rect.Rect(0,0,0,0)
+            
         def bullet_reset(self,i):
             SecondLevel.bullet_state[i] == "Ready"
             SecondLevel.bullety[i] = SecondLevel.enemyy[i] + 10
@@ -400,6 +417,7 @@ def run():
                 EnemyBoss.mechanic = ThirdMechanic()
             else:
                 EnemyBoss.enemy_state = "dead"
+                player.game_complete()
 
             # Detect if player hit boss
             bullet_hit = player.bullet_hitbox()
@@ -697,7 +715,6 @@ def run():
                         elif ThirdMechanic.me_health[i][1]:
                             ThirdMechanic.me_health[i][1] = False
                             ThirdMechanic.me_state[i] = False
-        dummy = None
 
     clock = pygame.time.Clock()
     screen = pygame.display.set_mode((1920, 1020))
@@ -705,11 +722,16 @@ def run():
     icon = pygame.image.load("ufo1.png")
     pygame.display.set_icon(icon)
 
-    # Set background according to level
-    #if Player.current_level == 0:
-    bg = pygame.image.load("background.jpg")
-
+    bg = [pygame.image.load("background.jpg"),pygame.image.load("background1.jpg"),pygame.image.load("background2.jpg")]
     bg_y = -1080
+
+    def draw_bg(level):
+        nonlocal bg_y  
+        bg_rel_y = bg_y % bg[level].get_rect().height
+        screen.blit(bg[level], (0,bg_rel_y - bg[level].get_rect().height))
+        if bg_rel_y < 1080:
+            screen.blit(bg[level], (0,bg_rel_y))
+        bg_y += 2
 
     player = Player()
     boss = EnemyBoss()
@@ -719,14 +741,8 @@ def run():
     while running:
         screen.fill((255,255,255))
 
-        # Scrolling Background
-        bg_rel_y = bg_y % bg.get_rect().height
-        screen.blit(bg, (0,bg_rel_y - bg.get_rect().height))
-        if bg_rel_y < 1080:
-            screen.blit(bg, (0,bg_rel_y))
-        bg_y += 2
+        draw_bg(player.current_level)
 
-        
         if player.player_state:
             player_hitbox = player.create_hitbox()
             player.movement()
@@ -734,7 +750,9 @@ def run():
             player.bullet_movement()
             player.mission()
             if player.level_done:
-                player.level_compete()
+                player.level_complete()
+            if player.game_done:
+                player.game_complete()
             
         if player.current_level == 0:
             level1.create_htibox()
@@ -778,7 +796,7 @@ def run():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
-                if player.level_done:
+                if player.level_done or player.game_done:
                     if event.key == pygame.K_SPACE:
                         player.level_proceed = True
 
