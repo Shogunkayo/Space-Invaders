@@ -1,7 +1,6 @@
 import sys
 import pygame
 import random
-import math
 
 running = True
 exit = False
@@ -197,18 +196,21 @@ def run():
                 player.level_done = False
 
         def game_complete(self):
-            player.level_done = True
+            global exit, running
+            player.game_done = True
             comp = pygame.font.Font("AldotheApache.ttf",150)
-            comp1 = pygame.font.Font("AldotheApache.ttf",50)
+            comp1 = pygame.font.Font("AldotheApache.ttf",100)
             cong1 = pygame.font.Font("AldotheApache.ttf",50)
-            cong = cong1.render("CONGRATULATIONS",True,(255,255,255)) 
-            level = comp.render("YOU WON",True,(255,255,255)) 
-            next = comp1.render("PRESS SPACE TO RETURN TO MENU", True,(255,255,255))
-            screen.blit(cong,(460,100))
-            screen.blit(level,(460,300))
-            screen.blit(next,(710,450))
+            cong = comp.render("CONGRATULATIONS",True,(255,255,255)) 
+            level = comp1.render("YOU WON",True,(255,255,255)) 
+            next = cong1.render("PRESS SPACE TO RETURN TO MENU", True,(255,255,255))
+            screen.blit(cong,(440,250))
+            screen.blit(level,(750,400))
+            screen.blit(next,(630,500))
             if player.level_proceed:
-                sys.exit()
+                exit = True
+                running = False
+                
             
         def mission(self):
             goal = pygame.font.Font("AldotheApache.ttf",30)
@@ -246,7 +248,7 @@ def run():
                     FirstLevel.enemy_hitbox[i] = FirstLevel.enemyimg[i].get_rect(topleft = (FirstLevel.enemyx[i], FirstLevel.enemyy[i]))
                 else:
                     FirstLevel.enemy_hitbox[i] = pygame.rect.Rect(-100,-100,0,0)
-                #pygame.draw.rect(screen, (255,0,0), FirstLevel.enemy_hitbox[i])
+                    pygame.draw.rect(screen, (255,0,0), FirstLevel.enemy_hitbox[i])
 
         def collision(self):
             bullet_hit = player.bullet_hitbox()
