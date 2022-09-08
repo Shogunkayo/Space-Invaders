@@ -32,9 +32,7 @@ def main_menu(window):
     root.title("SPACE INVADERS")
     root.geometry("1360x720")
 
-    bg_img=PhotoImage(file="title.png")
-    bg=Label(root,image=bg_img)
-    bg.place(x=0,y=0)
+    
 
     new_game=Button(root,text="PLAY",bg="purple",fg="white",padx=190,pady=50,command=lambda: start_game(root))    #play button
     new_game.place(x=455,y=250) 
