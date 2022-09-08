@@ -295,7 +295,7 @@ def run():
         enemy_state = [True for _ in range(5)]
         enemy_health = [3 for _ in range(5)]
 
-        bulletimgs = [pygame.image.load("level2bullet.png") for _ in range(5)]
+        bulletimgs = [pygame.image.load("bullet.png") for _ in range(5)]
         bulletx = [i for i in enemyx]
         bullety = [50,50,50,50,50]
         bullety_change = [10 for _ in range(5)]
